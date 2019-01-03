@@ -1,0 +1,64 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description:
+  Template for blue/green deploy
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: ec2
+    ConstraintDescription: must be the name of an existing EC2 KeyPair
+
+Resources:
+
+  Ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-6cd6f714
+      KeyName:
+        Ref: KeyName
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: 'true'
+        DeviceIndex: '0'
+        GroupSet:
+          - !Ref InstanceSecurityGroup
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash -x
+          yum install -y yum-utils \
+              device-mapper-persistent-data \
+              lvm2
+          yum-config-manager \
+              --add-repo \
+              https://download.docker.com/linux/centos/docker-ce.repo
+          yum install -y docker
+          systemctl start docker.service
+          systemctl enable docker.service
+          docker run -d -p 8080:8080 gookti/hello-world:hello-tomcat
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for docker tomcat Instance
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "0"
+          ToPort: 8080
+          CidrIp: "0.0.0.0/0"
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: "-1"
+      VpcId: vpc-bfa174c7
+
+
+Outputs:
+  PublicIp:
+    Value: !GetAtt Ec2Instance.PublicIp
