@@ -13,9 +13,9 @@ pipeline {
           String stacks = sh(returnStdout: true, script: 'aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE --query "StackSummaries[].StackName"')
           def chooseStack = (stacks.contains('blue')) ? 'green' : 'blue'
           env.stackName = chooseStack
-          sh "aws cloudformation create-stack --stack-name ${stackName} --template-body file://Instance.yaml ; \
-          aws cloudformation wait stack-create-complete --stack-name ${stackName}"
-          env.INSTANCE_IP = sh(returnStdout: true, script: """aws cloudformation describe-stacks --stack-name dockertest --query "Stacks[].Outputs[].OutputValue" --output text""").toString().replaceAll('\n', '')
+          sh "aws cloudformation create-stack --stack-name ${env.stackName} --template-body file://Instance.yaml ; \
+          aws cloudformation wait stack-create-complete --stack-name ${env.stackName}"
+          env.INSTANCE_IP = sh(returnStdout: true, script: """aws cloudformation describe-stacks --stack-name ${env.stackName} --query "Stacks[].Outputs[].OutputValue" --output text""").toString().replaceAll('\n', '')
         }
       }
     }
