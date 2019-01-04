@@ -23,7 +23,7 @@ pipeline {
       steps {
         script {
           println env.INSTANCE_IP
-          def appUrl = sh(returnStdout: true, script: """curl --connect-timeout 10 --max-time 20 --retry 10 --retry-delay 0 --retry-max-time 120 'http://${env.INSTANCE_IP}:8080/helloworld/'""")
+          def appUrl = sh(returnStdout: true, script: """curl --connect-timeout 10 --max-time 20 --retry 100 --retry-delay 0 --retry-max-time 120 'http://${env.INSTANCE_IP}:8080/helloworld/'""")
           if (appUrl.contains('Hello World!')) {
             echo "TEST is SUCCESS"
             if (env.stackName == 'blue') {
